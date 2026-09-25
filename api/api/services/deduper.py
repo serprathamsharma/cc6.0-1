@@ -114,17 +114,27 @@ async def dedupe_records(
     if not settings.is_demo:
         try:
             from rapidfuzz import fuzz
-            borderline = []
-            keys = [_key_fields(r) for r in records]
-            for i in range(len(records)):
-                for j in range(i + 1, len(records)):
+            keys = [_key_fields(r) for r in deduped]
+            llm_dupes: set[int] = set()
+            for i in range(len(deduped)):
+                if i in llm_dupes:
+                    continue
+                for j in range(i + 1, len(deduped)):
+                    if j in llm_dupes:
+                        continue
                     score = fuzz.token_sort_ratio(keys[i], keys[j])
                     if 70 <= score < threshold:
-                        borderline.append((i, j, score))
-            for i, j, score in borderline[:20]:  # limit LLM calls
-                is_dup = await llm_adjudicate_pair(records[i], records[j], run_id)
-                if is_dup:
-                    logger.info(f"LLM adjudicated duplicate: records {i} and {j}")
+                        is_dup = await llm_adjudicate_pair(deduped[i], deduped[j], run_id)
+                        if is_dup:
+                            logger.info(f"LLM adjudicated duplicate: records {i} and {j}")
+                            llm_dupes.add(j)
+                    if len(llm_dupes) >= 20:  # limit LLM calls
+                        break
+                if len(llm_dupes) >= 20:
+                    break
+            if llm_dupes:
+                deduped = [r for idx, r in enumerate(deduped) if idx not in llm_dupes]
+                logger.info(f"LLM adjudication removed {len(llm_dupes)} additional duplicates")
         except Exception as e:
             logger.warning(f"LLM adjudication failed: {e}")
 

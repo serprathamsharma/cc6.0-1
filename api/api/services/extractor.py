@@ -131,10 +131,50 @@ Rules:
 
 
 async def extract_records(
-    existing: list[dict],
+    pages: list[dict],
     requirement_spec: dict,
     config: dict,
     run_id: str | None = None,
 ) -> list[dict]:
-    """Run extraction pipeline."""
-    return existing  # real extraction happens in fetch+extract flow
+    """Run extraction pipeline across fetched pages (JSON-LD + LLM extraction with verification)."""
+    target_fields = requirement_spec.get("target_fields", [])
+    records: list[dict[str, Any]] = []
+
+    for page in pages:
+        html = page.get("html", "")
+        text = page.get("text", "")
+        url = page.get("url", "")
+        if not html and not text:
+            continue
+
+        # 1. Try structured extraction (JSON-LD / microdata)
+        schema_type = config.get("schema_type", "")
+        jsonld_items = extract_jsonld(html, schema_type=schema_type)
+        for item in jsonld_items:
+            rec: dict[str, Any] = {"_source_url": url, "_extraction_method": "json_ld"}
+            for f in target_fields:
+                fname = f.get("name") if isinstance(f, dict) else getattr(f, "name", str(f))
+                if fname in item:
+                    val = item[fname]
+                    rec[fname] = val
+                    rec[f"_evidence_{fname}"] = json.dumps(val)[:150]
+                    rec[f"_confidence_{fname}"] = 0.95
+                    rec[f"_verified_{fname}"] = True
+            if any(k for k in rec if not k.startswith("_")):
+                records.append(rec)
+
+        # 2. LLM extraction if structured data didn't yield records or for deep extraction
+        max_extract = config.get("max_records_per_page", 5)
+        if text and (not jsonld_items or len(records) < max_extract):
+            field_dicts = [
+                {
+                    "name": f.get("name") if isinstance(f, dict) else getattr(f, "name", str(f)),
+                    "type": f.get("type", "string") if isinstance(f, dict) else getattr(f, "type", "string"),
+                    "description": f.get("description", "") if isinstance(f, dict) else getattr(f, "description", ""),
+                }
+                for f in target_fields
+            ]
+            llm_records = await extract_with_llm(text, field_dicts, url, run_id=run_id)
+            records.extend(llm_records)
+
+    return records

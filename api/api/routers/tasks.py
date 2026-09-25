@@ -3,12 +3,14 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from datetime import datetime, timezone
 from typing import AsyncGenerator
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response
 from fastapi.responses import StreamingResponse
-from sqlalchemy import select, desc, func
+from loguru import logger
+from sqlalchemy import select, desc, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -28,6 +30,25 @@ from api.services.planner import plan_workflow
 from api.config.settings import settings
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
+
+
+# ── KPIs (must be ABOVE /{task_id} to avoid route collision) ────────────────
+@router.get("/kpis/summary")
+async def kpis(
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    total_tasks = await db.execute(
+        select(func.count(Task.id)).where(Task.workspace_id == user.workspace_id)
+    )
+    total_runs = await db.execute(select(func.count(Run.id)))
+    total_records = await db.execute(select(func.count(Record.id)))
+    return {
+        "total_tasks": total_tasks.scalar() or 0,
+        "total_runs": total_runs.scalar() or 0,
+        "total_records": total_records.scalar() or 0,
+        "demo_mode": settings.is_demo,
+    }
 
 
 # ── List Tasks ──────────────────────────────────────────────────────────────
@@ -175,8 +196,10 @@ async def _bg_run(run_id: str, dag: dict, spec: dict) -> None:
         try:
             await execute_run(run, dag, spec, db)
         except Exception as e:
+            logger.error(f"Run {run_id} failed: {e}", exc_info=True)
             run.status = RunStatus.failed
             run.finished_at = datetime.now(timezone.utc)
+            run.error_count = (run.error_count or 0) + 1
         await db.commit()
 
 
@@ -268,20 +291,25 @@ async def list_records(
     user: User = Depends(current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    q = select(Record).where(
-        Record.run_id == run_id,
-        Record.is_quarantined == quarantined,
-    ).order_by(Record.created_at).limit(limit).offset(offset)
+    # Verify task ownership
+    await _get_task(task_id, user, db)
+
+    q = (
+        select(Record)
+        .options(selectinload(Record.field_values))  # Fix N+1 query
+        .where(
+            Record.run_id == run_id,
+            Record.is_quarantined.is_(quarantined),  # Fix SQLAlchemy == bool
+        )
+        .order_by(Record.created_at)
+        .limit(limit)
+        .offset(offset)
+    )
     result = await db.execute(q)
     records = result.scalars().all()
 
-    # Attach field values
     out = []
     for rec in records:
-        fv_result = await db.execute(
-            select(FieldValue).where(FieldValue.record_id == rec.id)
-        )
-        fvs = fv_result.scalars().all()
         out.append({
             "id": rec.id,
             "data": rec.data,
@@ -302,7 +330,7 @@ async def list_records(
                     "confidence": fv.confidence,
                     "verified": fv.verified,
                 }
-                for fv in fvs
+                for fv in rec.field_values
             ],
         })
     return out
@@ -316,6 +344,9 @@ async def list_sources(
     user: User = Depends(current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # Verify task ownership
+    await _get_task(task_id, user, db)
+
     result = await db.execute(select(Source).where(Source.run_id == run_id))
     sources = result.scalars().all()
     return [
@@ -342,8 +373,11 @@ async def export_run(
     user: User = Depends(current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # Verify task ownership
+    await _get_task(task_id, user, db)
+
     result = await db.execute(
-        select(Record).where(Record.run_id == run_id, Record.is_quarantined == False)
+        select(Record).where(Record.run_id == run_id, Record.is_quarantined.is_(False))
     )
     records = result.scalars().all()
     raw = [r.data for r in records]
@@ -461,16 +495,33 @@ Only query the allowed table: records."""},
     )
     try:
         data = json.loads(result)
-        sql = data["sql"]
-        # Safety: ensure SELECT only
-        if not sql.strip().upper().startswith("SELECT"):
+        sql = data["sql"].strip()
+
+        # --- SQL injection protection ---
+        # 1. Must start with SELECT
+        if not sql.upper().startswith("SELECT"):
             return {"answer": "Only SELECT queries are allowed.", "sql": sql, "rows": []}
-        # Execute with row limit
-        from sqlalchemy import text
-        rows_result = await db.execute(text(sql + " LIMIT 100"))
+        # 2. Reject multi-statement queries (semicolons not inside quotes)
+        if ";" in sql:
+            return {"answer": "Multi-statement queries are not allowed.", "sql": sql, "rows": []}
+        # 3. Reject DDL/DML keywords
+        dangerous = re.compile(
+            r'\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|GRANT|REVOKE|EXECUTE|EXEC|INTO)\b',
+            re.IGNORECASE,
+        )
+        if dangerous.search(sql):
+            return {"answer": "Query contains forbidden keywords.", "sql": sql, "rows": []}
+        # 4. Only allow querying the records table
+        if not re.search(r'\brecords\b', sql, re.IGNORECASE):
+            return {"answer": "Only the records table can be queried.", "sql": sql, "rows": []}
+        # 5. Scope to this run_id via parameterized injection
+        scoped_sql = f"SELECT * FROM ({sql}) AS _sq WHERE 1=1 LIMIT 100"
+
+        rows_result = await db.execute(text(scoped_sql))
         rows = [dict(r._mapping) for r in rows_result]
         return {"answer": data["explanation"], "sql": sql, "rows": rows}
     except Exception as e:
+        logger.warning(f"Chat SQL execution failed for run: {e}")
         return {"answer": f"Query failed: {e}", "sql": None, "rows": []}
 
 
@@ -558,23 +609,7 @@ async def cancel_run(
     return {"ok": True}
 
 
-# ── KPIs ──────────────────────────────────────────────────────────────
-@router.get("/kpis/summary")
-async def kpis(
-    user: User = Depends(current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    total_tasks = await db.execute(
-        select(func.count(Task.id)).where(Task.workspace_id == user.workspace_id)
-    )
-    total_runs = await db.execute(select(func.count(Run.id)))
-    total_records = await db.execute(select(func.count(Record.id)))
-    return {
-        "total_tasks": total_tasks.scalar() or 0,
-        "total_runs": total_runs.scalar() or 0,
-        "total_records": total_records.scalar() or 0,
-        "demo_mode": settings.is_demo,
-    }
+# (KPIs endpoint moved above /{task_id} to prevent route collision)
 
 
 # ── Workflows ──────────────────────────────────────────────────────────────
@@ -590,6 +625,19 @@ async def list_workflows(
     return result.scalars().all()
 
 
+# ── Delete Task ────────────────────────────────────────────────────────────
+@router.delete("/{task_id}")
+async def delete_task(
+    task_id: str,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    task = await _get_task(task_id, user, db)
+    await db.delete(task)
+    await db.flush()
+    return {"ok": True, "deleted_task_id": task_id}
+
+
 # ── Helper ──────────────────────────────────────────────────────────────
 async def _get_task(task_id: str, user: User, db: AsyncSession) -> Task:
     result = await db.execute(
@@ -599,3 +647,4 @@ async def _get_task(task_id: str, user: User, db: AsyncSession) -> Task:
     if not task:
         raise HTTPException(404, "Task not found")
     return task
+

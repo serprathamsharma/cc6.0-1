@@ -6,16 +6,20 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
+from urllib.parse import urlparse
+
 from loguru import logger
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.config.settings import settings
+from api.models.data import DatasetVersion, FieldValue, Record, Source
 from api.models.task import Run, RunEvent, RunStatus
 from api.services import fixtures as fixture_svc
-from api.services.fetcher import fetch_sources
-from api.services.extractor import extract_records
-from api.services.validator import validate_records
 from api.services.deduper import dedupe_records
+from api.services.extractor import extract_records
+from api.services.fetcher import fetch_sources
+from api.services.validator import validate_records
 
 NODE_STATUS_PENDING = "pending"
 NODE_STATUS_RUNNING = "running"
@@ -153,12 +157,26 @@ async def _execute_demo(
     run.demo_mode = True
     await db.flush()
 
-    # Create dataset version
+    # Create dataset version (auto-increment)
+    stmt = select(func.max(DatasetVersion.version_number)).where(DatasetVersion.task_id == run.task_id)
+    max_res = await db.execute(stmt)
+    max_ver = max_res.scalar_one_or_none() or 0
+    next_ver = max_ver + 1
+
+    prev_id = None
+    if max_ver > 0:
+        prev_stmt = select(DatasetVersion.id).where(
+            DatasetVersion.task_id == run.task_id,
+            DatasetVersion.version_number == max_ver,
+        )
+        prev_id = (await db.execute(prev_stmt)).scalar_one_or_none()
+
     dsv = DatasetVersion(
         task_id=run.task_id,
         run_id=run.id,
-        version_number=1,
+        version_number=next_ver,
         record_count=len(records),
+        previous_version_id=prev_id,
     )
     db.add(dsv)
     await db.flush()
@@ -176,9 +194,10 @@ async def _execute_real(
     node_states: dict,
     node_map: dict,
 ) -> None:
-    """Execute real DAG (non-demo)."""
+    """Execute real DAG (non-demo) with full extraction, validation, and persistence."""
     nodes = dag.get("nodes", [])
     completed: set[str] = set()
+    fetched_pages: list[dict] = []
     all_records: list[dict] = []
 
     def ready(node: dict) -> bool:
@@ -206,19 +225,40 @@ async def _execute_real(
             try:
                 if tool in ("discover_sources", "fetch_static"):
                     fetched = await fetch_sources(requirement_spec, node["config"], run.id, db)
+                    fetched_pages.extend(fetched)
                     run.pages_fetched += len(fetched)
+                    # Persist sources
+                    for p in fetched:
+                        url = p.get("url", "")
+                        parsed = urlparse(url)
+                        source = Source(
+                            run_id=run.id,
+                            domain=parsed.netloc or "unknown",
+                            url=url,
+                            robots_allowed=True,
+                            http_status=p.get("http_status", 200),
+                            content_hash=p.get("content_hash"),
+                            pages_fetched=1,
+                        )
+                        db.add(source)
+                    await db.flush()
+
                 elif tool in ("extract_structured", "extract_llm"):
-                    extracted = await extract_records(all_records, requirement_spec, node["config"], run.id)
+                    extracted = await extract_records(fetched_pages, requirement_spec, node["config"], run.id)
                     all_records.extend(extracted)
                     run.records_found = len(all_records)
+
                 elif tool == "validate":
                     all_records = await validate_records(all_records)
                     run.records_validated = len(all_records)
+
                 elif tool == "dedupe":
-                    all_records = await dedupe_records(all_records, node["config"])
+                    all_records = await dedupe_records(all_records, node["config"], run_id=run.id)
                     run.records_deduped = len(all_records)
+
                 elif tool == "normalize":
                     pass  # handled in extractor
+
                 elif tool == "score":
                     pass  # scores assigned during validate
 
@@ -237,5 +277,58 @@ async def _execute_real(
             run.node_states = dict(node_states)
             await db.flush()
 
+    # Persist all extracted records and field values to DB (#11)
+    entity_type = requirement_spec.get("entity_type", "record")
+    for raw in all_records:
+        rec = Record(
+            run_id=run.id,
+            data=raw,
+            quality_score=raw.get("_quality_score", 85.0),
+            entity_type=entity_type,
+            is_quarantined=raw.get("_is_quarantined", False),
+        )
+        db.add(rec)
+        await db.flush()
+
+        for field, value in raw.items():
+            if field.startswith("_"):
+                continue
+            fv = FieldValue(
+                record_id=rec.id,
+                field_name=field,
+                value_text=str(value) if value is not None else None,
+                source_url=raw.get("_source_url", "https://scoutiq.dev"),
+                evidence_snippet=raw.get(f"_evidence_{field}", ""),
+                extraction_method=raw.get("_extraction_method", "unknown"),
+                confidence=raw.get(f"_confidence_{field}", 1.0),
+                fetched_at=datetime.now(timezone.utc),
+                verified=raw.get(f"_verified_{field}", True),
+            )
+            db.add(fv)
+
+    # Auto-increment DatasetVersion (#14)
+    stmt = select(func.max(DatasetVersion.version_number)).where(DatasetVersion.task_id == run.task_id)
+    max_res = await db.execute(stmt)
+    max_ver = max_res.scalar_one_or_none() or 0
+    next_ver = max_ver + 1
+
+    prev_id = None
+    if max_ver > 0:
+        prev_stmt = select(DatasetVersion.id).where(
+            DatasetVersion.task_id == run.task_id,
+            DatasetVersion.version_number == max_ver,
+        )
+        prev_id = (await db.execute(prev_stmt)).scalar_one_or_none()
+
+    dsv = DatasetVersion(
+        task_id=run.task_id,
+        run_id=run.id,
+        version_number=next_ver,
+        record_count=len(all_records),
+        previous_version_id=prev_id,
+    )
+    db.add(dsv)
+
     run.status = RunStatus.completed
-    await emit_event(db, run.id, "run_completed", f"Run complete. {run.records_deduped} records.")
+    await db.flush()
+    await emit_event(db, run.id, "run_completed", f"Run complete. {len(all_records)} records persisted.")

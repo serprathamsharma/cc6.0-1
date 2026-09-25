@@ -34,7 +34,7 @@ jobs:
         run: cd api && pip install -r requirements.txt
 
       - name: Lint
-        run: cd api && ruff check . || true
+        run: cd api && ruff check .
 
       - name: Run tests
         env:
@@ -61,6 +61,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - name: Install
-        run: cd frontend && npm ci --legacy-peer-deps || true
+        run: cd frontend && npm ci --legacy-peer-deps
       - name: Build
-        run: cd frontend && npm run build || true
+        run: cd frontend && npm run build

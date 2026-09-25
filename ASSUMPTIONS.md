@@ -50,7 +50,7 @@
 
 19. **Login detection:** HTTP 401/403 responses and pages containing login forms (detected by `<form>` with password input) are flagged as login-walled and skipped.
 
-20. **User-Agent:** `ScoutIQ/1.0 (+https://github.com/your-org/scoutiq)` — honest, includes contact URL.
+20. **User-Agent:** `ScoutIQ/1.0 (+https://github.com/serprathamsharma/cc6.0-1)` — honest, includes contact URL.
 
 ## Evals
 

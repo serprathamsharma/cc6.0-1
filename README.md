@@ -2,7 +2,7 @@
 
 > **AI Data-Intelligence Platform** — describe a data need in plain English, get a clean, structured, deduplicated, source-backed dataset in minutes.
 
-[![CI](https://github.com/your-org/scoutiq/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/scoutiq/actions)
+[![CI](https://github.com/serprathamsharma/cc6.0-1/actions/workflows/ci.yml/badge.svg)](https://github.com/serprathamsharma/cc6.0-1/actions)
 ![Python](https://img.shields.io/badge/python-3.12+-blue)
 ![Next.js](https://img.shields.io/badge/next.js-15-black)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -92,7 +92,7 @@ graph TB
 - `.env` file (copy from `.env.example`)
 
 ```bash
-git clone https://github.com/your-org/scoutiq
+git clone https://github.com/serprathamsharma/cc6.0-1
 cd scoutiq
 cp .env.example .env
 # Edit .env — at minimum set APP_SECRET_KEY
@@ -314,7 +314,7 @@ Eval harness tested on three demo scenarios with fixture replay (no live network
 |---|---|
 | robots.txt | Fetched and cached 24h per domain; blocked paths skipped with reason logged |
 | Rate limiting | 1 req/s per domain enforced via token bucket; configurable |
-| User-Agent | `ScoutIQ/1.0 (+https://github.com/your-org/scoutiq)` |
+| User-Agent | `ScoutIQ/1.0 (+https://github.com/serprathamsharma/cc6.0-1)` |
 | No login walls | Detector checks for 401/403/login-form redirect; source skipped |
 | No CAPTCHAs | CAPTCHA page detector; source quarantined |
 | PII masking | Personal email regex → `[REDACTED]`; only published business contacts kept |

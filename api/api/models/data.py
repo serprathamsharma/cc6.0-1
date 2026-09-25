@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from sqlalchemy import (
     Boolean, DateTime, Float, ForeignKey, Integer, JSON, String, Text
@@ -34,8 +34,8 @@ class Source(Base, TimestampMixin):
     error_count: Mapped[int] = mapped_column(Integer, default=0)
     skipped_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    run: Mapped[any] = relationship("Run", back_populates="sources")
-    snapshots: Mapped[list[Snapshot]] = relationship(back_populates="source")
+    run: Mapped[Any] = relationship("Run", back_populates="sources")
+    snapshots: Mapped[list[Snapshot]] = relationship(back_populates="source", cascade="all, delete-orphan")
 
 
 class Snapshot(Base, TimestampMixin):
@@ -70,8 +70,8 @@ class Record(Base, TimestampMixin):
     pii_flagged: Mapped[bool] = mapped_column(Boolean, default=False)
     entity_type: Mapped[str] = mapped_column(String(64), default="")
 
-    run: Mapped[any] = relationship("Run", back_populates="records")
-    field_values: Mapped[list[FieldValue]] = relationship(back_populates="record")
+    run: Mapped[Any] = relationship("Run", back_populates="records")
+    field_values: Mapped[list[FieldValue]] = relationship(back_populates="record", cascade="all, delete-orphan")
 
 
 class FieldValue(Base, TimestampMixin):

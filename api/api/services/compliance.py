@@ -62,7 +62,7 @@ def generate_compliance_report(
         "robots_disallowed": sum(1 for s in sources if s.get("robots_allowed") is False),
         "robots_unchecked": sum(1 for s in sources if s.get("robots_allowed") is None),
         "skipped_sources": skipped or [],
-        "user_agent": "ScoutIQ/1.0 (+https://scoutiq.dev/bot)",
+        "user_agent": "ScoutIQ/1.0 (+https://github.com/serprathamsharma/cc6.0-1)",
         "login_walled_bypassed": False,
         "captcha_bypassed": False,
         "pii_fields_masked": True,

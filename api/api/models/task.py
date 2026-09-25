@@ -42,7 +42,7 @@ class Task(Base, TimestampMixin):
     title: Mapped[str] = mapped_column(String(500))
     prompt: Mapped[str] = mapped_column(Text)
     status: Mapped[TaskStatus] = mapped_column(
-        SAEnum(TaskStatus), default=TaskStatus.draft
+        SAEnum(TaskStatus, native_enum=False), default=TaskStatus.draft
     )
     schedule_cron: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -50,8 +50,8 @@ class Task(Base, TimestampMixin):
     latest_dataset_version_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
 
     workspace: Mapped[Any] = relationship("Workspace", back_populates="tasks")
-    workflows: Mapped[list[Workflow]] = relationship(back_populates="task", order_by="Workflow.version.desc()")
-    runs: Mapped[list[Run]] = relationship(back_populates="task")
+    workflows: Mapped[list[Workflow]] = relationship(back_populates="task", order_by="Workflow.version.desc()", cascade="all, delete-orphan")
+    runs: Mapped[list[Run]] = relationship(back_populates="task", cascade="all, delete-orphan")
 
 
 class Workflow(Base, TimestampMixin):
@@ -78,7 +78,7 @@ class Run(Base, TimestampMixin):
     task_id: Mapped[str] = mapped_column(ForeignKey("tasks.id"), index=True)
     workflow_id: Mapped[str] = mapped_column(ForeignKey("workflows.id"), index=True)
     status: Mapped[RunStatus] = mapped_column(
-        SAEnum(RunStatus), default=RunStatus.queued, index=True
+        SAEnum(RunStatus, native_enum=False), default=RunStatus.queued, index=True
     )
     node_states: Mapped[dict] = mapped_column(JSON, default=dict)  # {node_id: NodeState}
     started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -94,9 +94,9 @@ class Run(Base, TimestampMixin):
 
     task: Mapped[Task] = relationship(back_populates="runs")
     workflow: Mapped[Workflow] = relationship(back_populates="runs")
-    events: Mapped[list[RunEvent]] = relationship(back_populates="run")
-    records: Mapped[list[Record]] = relationship(back_populates="run")
-    sources: Mapped[list[Source]] = relationship(back_populates="run")
+    events: Mapped[list[RunEvent]] = relationship(back_populates="run", cascade="all, delete-orphan")
+    records: Mapped[list[Record]] = relationship(back_populates="run", cascade="all, delete-orphan")
+    sources: Mapped[list[Source]] = relationship(back_populates="run", cascade="all, delete-orphan")
 
 
 class RunEvent(Base):

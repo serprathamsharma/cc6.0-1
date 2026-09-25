@@ -29,4 +29,10 @@ class TimestampMixin:
 
 
 def new_id() -> str:
-    return str(uuid.uuid4())
+    """Generate a time-sortable ULID (or UUID4 fallback)."""
+    try:
+        import ulid
+        return str(ulid.new())
+    except Exception:
+        return str(uuid.uuid4())
+

@@ -56,11 +56,19 @@ def decode_token(token: str) -> TokenData:
 
 async def current_user(
     creds: Optional[HTTPAuthorizationCredentials] = Depends(bearer),
+    token: Optional[str] = None,  # SSE query param fallback (EventSource can't send headers)
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    if not creds:
+    # Try Authorization header first, then ?token= query param (for SSE EventSource)
+    jwt_token: str | None = None
+    if creds:
+        jwt_token = creds.credentials
+    elif token:
+        jwt_token = token
+
+    if not jwt_token:
         raise HTTPException(status_code=401, detail="Missing token")
-    data = decode_token(creds.credentials)
+    data = decode_token(jwt_token)
     result = await db.execute(select(User).where(User.id == data.user_id))
     user = result.scalar_one_or_none()
     if not user or not user.is_active:

@@ -1,6 +1,7 @@
 """Application settings loaded from environment."""
 from __future__ import annotations
 
+import functools
 import json
 import os
 from pathlib import Path
@@ -61,7 +62,7 @@ class Settings(BaseSettings):
             return True
         return False
 
-    @property
+    @functools.cached_property
     def pricing(self) -> dict[str, Any]:
         path = self.llm_pricing_file or str(
             Path(__file__).parent / "pricing.json"

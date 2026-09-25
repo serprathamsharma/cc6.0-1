@@ -44,9 +44,8 @@ def do_run_migrations(connection: Connection) -> None:
         context.run_migrations()
 
 
-async def run_async_migrations() -> None:
+def run_migrations_online() -> None:
     url = config.get_main_option("sqlalchemy.url")
-    # Use sync engine for alembic
     from sqlalchemy import create_engine
     sync_url = url.replace("postgresql+asyncpg", "postgresql") if url else url
     engine = create_engine(sync_url, poolclass=pool.NullPool)
@@ -54,9 +53,6 @@ async def run_async_migrations() -> None:
         do_run_migrations(connection)
     engine.dispose()
 
-
-def run_migrations_online() -> None:
-    asyncio.run(run_async_migrations())
 
 
 if context.is_offline_mode():

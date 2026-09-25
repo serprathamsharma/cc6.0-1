@@ -16,7 +16,7 @@ from api.config.settings import settings
 
 _robots_cache: dict[str, tuple[RobotFileParser, float]] = {}
 ROBOTS_TTL = 86400  # 24 hours
-USER_AGENT = "ScoutIQ/1.0 (+https://scoutiq.dev/bot)"
+USER_AGENT = "ScoutIQ/1.0 (+https://github.com/serprathamsharma/cc6.0-1)"
 
 
 async def is_allowed(url: str) -> bool:
