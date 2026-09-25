@@ -17,13 +17,13 @@ from sqlalchemy.orm import selectinload
 from api.auth import current_user
 from api.db import get_db, AsyncSessionLocal
 from api.models.task import Run, RunEvent, RunStatus, Task, TaskStatus, Workflow
-from api.models.data import DatasetVersion, Export, Record, FieldValue, Source
+from api.models.data import DatasetVersion, Record, FieldValue, Source
 from api.models.workspace import User
 from api.schemas.task import (
-    ChatRequest, ExportRequest, RecordOut, RefineRequest,
+    ChatRequest, ExportRequest, RefineRequest,
     RunOut, TaskCreate, TaskOut, WorkflowApprove, WorkflowOut,
 )
-from api.services.compliance import screen_prompt, generate_compliance_report
+from api.services.compliance import screen_prompt
 from api.services.diff import compute_version_diff
 from api.services.enricher import enrich_record_gaps
 from api.services.executor import execute_run
@@ -651,7 +651,8 @@ async def delete_task(
 ):
     task = await _get_task(task_id, user, db)
     await db.delete(task)
-    return {"ok": True}
+    await db.flush()
+    return {"ok": True, "deleted_task_id": task_id}
 
 
 @router.post("/{task_id}/clone", response_model=TaskOut, status_code=201)
@@ -704,17 +705,6 @@ async def list_workflows(
     return result.scalars().all()
 
 
-# ── Delete Task ────────────────────────────────────────────────────────────
-@router.delete("/{task_id}")
-async def delete_task(
-    task_id: str,
-    user: User = Depends(current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    task = await _get_task(task_id, user, db)
-    await db.delete(task)
-    await db.flush()
-    return {"ok": True, "deleted_task_id": task_id}
 
 
 # ── Helper ──────────────────────────────────────────────────────────────

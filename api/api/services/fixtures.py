@@ -78,9 +78,9 @@ def _jobs_fixture() -> list[dict]:
             "_source_url": src_url,
             "_quality_score": 82.0 + (i % 15),
             "_extraction_method": "fixture",
-            f"_evidence_title": f"{role} Intern at {company}",
-            f"_evidence_company": f"Posted by {company}",
-            f"_evidence_stipend": f"Stipend: {stipend}",
+            "_evidence_title": f"{role} Intern at {company}",
+            "_evidence_company": f"Posted by {company}",
+            "_evidence_stipend": f"Stipend: {stipend}",
             "_verified_title": True,
             "_verified_company": True,
         })

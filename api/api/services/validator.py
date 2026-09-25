@@ -2,10 +2,8 @@
 from __future__ import annotations
 
 import re
-from typing import Any
 from urllib.parse import urlparse
 
-from loguru import logger
 
 # PII patterns to mask
 _PERSONAL_EMAIL_RE = re.compile(

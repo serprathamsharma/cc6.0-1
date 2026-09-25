@@ -1,7 +1,7 @@
 """Auth router: register, login."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -9,7 +9,6 @@ from api.db import get_db
 from api.models.workspace import User, Workspace
 from api.auth import create_token, hash_password, verify_password
 from api.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
-from api.models.base import new_id
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

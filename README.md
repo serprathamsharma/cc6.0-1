@@ -1,4 +1,4 @@
-# ScoutIQ 🔍
+# ScoutIQ
 
 > **AI Data-Intelligence Platform** — describe a data need in plain English, get a clean, structured, deduplicated, source-backed dataset in minutes.
 
@@ -9,7 +9,7 @@
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 graph TB
@@ -56,7 +56,7 @@ graph TB
 
     CC -->|POST /tasks| Tasks
     PR -->|POST /plan + /approve| Tasks
-    RM -->|SSE /runs/{id}/events| Tasks
+    RM -->|SSE /runs/:id/events| Tasks
     RE -->|GET /records| Tasks
     SI -->|GET /sources| Tasks
     TM -->|CRUD /tasks| Tasks
@@ -85,7 +85,7 @@ graph TB
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Docker + Docker Compose
@@ -116,19 +116,19 @@ docker compose up
 
 ---
 
-## 🏆 Cutting-Edge Intelligence Features
+## Cutting-Edge Intelligence Features
 
 | Capability | Innovation | Inspiration & Value |
 |---|---|---|
-| **📊 Autonomous AI Insights** | Auto-generates executive summaries, statistical anomaly flags, categorical histograms, and 1-click interactive inquiries. | *ThoughtSpot & Palantir Foundry* — turns raw scraped rows into instantaneous executive intelligence. |
-| **🔍 Cell-Level Provenance & HITL** | Every cell traces to cryptographic SHA-256 snapshot hashes, verbatim quotes, confidence meters, and allows real-time Human-in-the-Loop adjudication (verify, dispute, edit). | *Scale AI Data Engine* — 100% anti-hallucination and auditability for regulated enterprise domains. |
-| **⚡ Autonomous Gap-Filling Agent** | Scans for empty schema attributes across harvested records and autonomously triggers targeted secondary web searches to backfill missing fields. | *Clay & Apollo* — eliminates sparse datasets without human intervention. |
-| **📈 Version Diff & Lineage Engine** | Computes record-level diffs between consecutive crawler runs, tracking added, modified, and removed entities with quality score deltas. | *DataHub & Git for Data* — enables continuous automated web monitoring without duplicate storage. |
-| **🔌 Model Context Protocol (MCP)** | Native JSON-RPC 2.0 MCP server exposing tools (`scoutiq_query_records`, `scoutiq_get_dataset_insights`, `scoutiq_verify_provenance`) to Cursor, Claude Desktop, and autonomous agents. | *Anthropic MCP Spec* — interoperable with next-gen agent swarms. |
+| **Autonomous AI Insights** | Auto-generates executive summaries, statistical anomaly flags, categorical histograms, and 1-click interactive inquiries. | *ThoughtSpot & Palantir Foundry* — turns raw scraped rows into instantaneous executive intelligence. |
+| **Cell-Level Provenance & HITL** | Every cell traces to cryptographic SHA-256 snapshot hashes, verbatim quotes, confidence meters, and allows real-time Human-in-the-Loop adjudication (verify, dispute, edit). | *Scale AI Data Engine* — 100% anti-hallucination and auditability for regulated enterprise domains. |
+| **Autonomous Gap-Filling Agent** | Scans for empty schema attributes across harvested records and autonomously triggers targeted secondary web searches to backfill missing fields. | *Clay & Apollo* — eliminates sparse datasets without human intervention. |
+| **Version Diff & Lineage Engine** | Computes record-level diffs between consecutive crawler runs, tracking added, modified, and removed entities with quality score deltas. | *DataHub & Git for Data* — enables continuous automated web monitoring without duplicate storage. |
+| **Model Context Protocol (MCP)** | Native JSON-RPC 2.0 MCP server exposing tools (`scoutiq_query_records`, `scoutiq_get_dataset_insights`, `scoutiq_verify_provenance`) to Cursor, Claude Desktop, and autonomous agents. | *Anthropic MCP Spec* — interoperable with next-gen agent swarms. |
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 | Env Var | Default | Description |
 |---|---|---|
@@ -146,7 +146,7 @@ docker compose up
 
 ---
 
-## 📁 Repo Layout
+## Repo Layout
 
 ```
 scoutiq/
@@ -206,7 +206,7 @@ scoutiq/
 
 ---
 
-## 🧪 Running Tests
+## Running Tests
 
 ### Backend Unit Tests (no external services needed)
 ```bash
@@ -238,7 +238,7 @@ make all         # All of the above
 
 ---
 
-## 📊 Eval Results
+## Eval Results
 
 Eval harness tested on three demo scenarios with fixture replay (no live network).
 
@@ -246,13 +246,13 @@ Eval harness tested on three demo scenarios with fixture replay (no live network
 
 | Metric | Result | Threshold | Status |
 |---|---|---|---|
-| Records collected | 60 | ≥ 50 | ✅ PASS |
-| Required field coverage | 98.3% | ≥ 80% | ✅ PASS |
-| Mean quality score | 82.4 / 100 | ≥ 70 | ✅ PASS |
-| Dedupe precision | 94.1% | ≥ 85% | ✅ PASS |
-| Source coverage | 8 domains | ≥ 3 | ✅ PASS |
-| Anti-hallucination (verified snippets) | 100% | 100% | ✅ PASS |
-| PII masked | 100% | 100% | ✅ PASS |
+| Records collected | 60 | ≥ 50 | PASS |
+| Required field coverage | 98.3% | ≥ 80% | PASS |
+| Mean quality score | 82.4 / 100 | ≥ 70 | PASS |
+| Dedupe precision | 94.1% | ≥ 85% | PASS |
+| Source coverage | 8 domains | ≥ 3 | PASS |
+| Anti-hallucination (verified snippets) | 100% | 100% | PASS |
+| PII masked | 100% | 100% | PASS |
 
 **Fields:** title, company, location, apply_link, stipend_inr, skills, posted_date, work_mode
 
@@ -260,12 +260,12 @@ Eval harness tested on three demo scenarios with fixture replay (no live network
 
 | Metric | Result | Threshold | Status |
 |---|---|---|---|
-| Records collected | 60 | ≥ 50 | ✅ PASS |
-| Required field coverage | 96.7% | ≥ 80% | ✅ PASS |
-| Mean quality score | 79.1 / 100 | ≥ 65 | ✅ PASS |
-| Dedupe precision | 91.2% | ≥ 85% | ✅ PASS |
-| Source coverage | 10 domains | ≥ 3 | ✅ PASS |
-| Anti-hallucination (verified snippets) | 100% | 100% | ✅ PASS |
+| Records collected | 60 | ≥ 50 | PASS |
+| Required field coverage | 96.7% | ≥ 80% | PASS |
+| Mean quality score | 79.1 / 100 | ≥ 65 | PASS |
+| Dedupe precision | 91.2% | ≥ 85% | PASS |
+| Source coverage | 10 domains | ≥ 3 | PASS |
+| Anti-hallucination (verified snippets) | 100% | 100% | PASS |
 
 **Fields:** company_name, event_name, sponsorship_tier, contact_page, industry, hq_city
 
@@ -273,18 +273,18 @@ Eval harness tested on three demo scenarios with fixture replay (no live network
 
 | Metric | Result | Threshold | Status |
 |---|---|---|---|
-| Records collected | 60 | ≥ 50 | ✅ PASS |
-| Required field coverage | 97.8% | ≥ 80% | ✅ PASS |
-| Mean quality score | 86.3 / 100 | ≥ 75 | ✅ PASS |
-| Dedupe precision | 96.7% | ≥ 85% | ✅ PASS |
-| Source coverage | 20 domains | ≥ 15 | ✅ PASS |
-| Anti-hallucination (verified snippets) | 100% | 100% | ✅ PASS |
+| Records collected | 60 | ≥ 50 | PASS |
+| Required field coverage | 97.8% | ≥ 80% | PASS |
+| Mean quality score | 86.3 / 100 | ≥ 75 | PASS |
+| Dedupe precision | 96.7% | ≥ 85% | PASS |
+| Source coverage | 20 domains | ≥ 15 | PASS |
+| Anti-hallucination (verified snippets) | 100% | 100% | PASS |
 
 **Fields:** product_name, plan_name, price_monthly, price_annual, users_limit, features, free_tier
 
 ---
 
-## 🎬 2-Minute Demo Script
+## 2-Minute Demo Script
 
 > **Setting:** `docker compose up` is running. Browser open at http://localhost:3000. Screen recorded.
 
@@ -320,7 +320,7 @@ Eval harness tested on three demo scenarios with fixture replay (no live network
 
 ---
 
-## 🔒 Compliance Design
+## Compliance Design
 
 | Principle | Implementation |
 |---|---|
@@ -335,12 +335,12 @@ Eval harness tested on three demo scenarios with fixture replay (no live network
 
 ---
 
-## 🛠️ Data Model (14 tables)
+## Data Model (14 tables)
 
 `workspaces` → `users` → `tasks` → `workflows` (versioned DAG) → `runs` → `run_events` (SSE stream) → `sources` → `snapshots` → `records` → `field_values` (provenance) → `dataset_versions` → `dedupe_clusters` → `exports` → `schedules` → `llm_calls` (cost tracking)
 
 ---
 
-## 📝 License
+## License
 
 MIT © 2026 ScoutIQ Contributors

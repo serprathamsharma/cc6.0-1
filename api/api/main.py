@@ -1,12 +1,16 @@
 """ScoutIQ FastAPI application entry point."""
 from __future__ import annotations
 
+import os
+import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import sys
 from loguru import logger
+
+from api.config.settings import settings
+from api.routers import auth, health, mcp, tasks
 
 # Configure structured logging
 logger.remove()
@@ -16,12 +20,8 @@ logger.add(
     level="INFO",
 )
 
-from api.config.settings import settings
-from api.routers import auth, health, mcp, tasks
-
 # Configurable CORS origins: defaults + CORS_ORIGINS env var (comma-separated)
 _CORS_ORIGINS = ["http://localhost:3000", "http://web:3000"]
-import os
 _extra = os.environ.get("CORS_ORIGINS", "")
 if _extra:
     _CORS_ORIGINS.extend(o.strip() for o in _extra.split(",") if o.strip())

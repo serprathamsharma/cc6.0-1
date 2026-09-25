@@ -1,10 +1,15 @@
 """Workspace and User models."""
 from __future__ import annotations
 
-from sqlalchemy import Boolean, ForeignKey, String, Text
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Boolean, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimestampMixin, new_id
+
+if TYPE_CHECKING:
+    from .task import Task
 
 
 class Workspace(Base, TimestampMixin):

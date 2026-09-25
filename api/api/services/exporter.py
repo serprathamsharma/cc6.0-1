@@ -4,10 +4,8 @@ from __future__ import annotations
 import io
 import json
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
-from loguru import logger
 
 
 def _clean_records(
@@ -50,7 +48,6 @@ def export_csv(records: list[dict], include_provenance: bool = True) -> bytes:
 def export_xlsx(records: list[dict], include_provenance: bool = True) -> bytes:
     import pandas as pd
     clean_data = _clean_records(records, include_provenance=False)
-    clean_prov = _clean_records(records, include_provenance=True)
 
     if not clean_data:
         return b""

@@ -8,7 +8,6 @@ from typing import Any, Optional
 
 import openai
 from loguru import logger
-from tenacity import retry, stop_after_attempt, wait_exponential
 
 from api.config.settings import settings
 
@@ -109,7 +108,7 @@ async def llm_call(
             usage = resp.usage
             cost = _cost(model, usage.prompt_tokens, usage.completion_tokens)
             latency = int((time.time() - t0) * 1000)
-            logger.info(f"LLM {model}/{purpose} in={usage.prompt_tokens} out={usage.completion_tokens} cost=${cost:.4f}")
+            logger.info(f"LLM {model}/{purpose} in={usage.prompt_tokens} out={usage.completion_tokens} cost=${cost:.4f} latency={latency}ms")
             # TODO: persist to llm_calls table
             return content
         except openai.RateLimitError:

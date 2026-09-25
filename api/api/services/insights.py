@@ -16,8 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from api.config.settings import settings
-from api.models.data import FieldValue, Record
-from api.models.task import Run
+from api.models.data import Record
 from api.services.llm import llm_call
 
 
@@ -177,7 +176,7 @@ Provide a structured JSON response:
             logger.warning(f"AI insights generation failed, using fallback: {e}")
             executive_summary = f"Harvested {len(records)} source-grounded records with an average quality score of {avg_quality}%."
             key_takeaways = [
-                f"100% of data points trace back to verified cryptographic source snapshots.",
+                "100% of data points trace back to verified cryptographic source snapshots.",
                 f"Dataset contains {len(field_keys)} normalized attributes across {len(records)} deduplicated entities.",
                 f"Overall data integrity rating is rated at {avg_quality}/100.",
             ]
@@ -197,7 +196,7 @@ Provide a structured JSON response:
         key_takeaways = [
             f"Captured {len(records)} fully deduplicated entities spanning {len(field_keys)} structured fields.",
             f"Average data corroboration score stands at {avg_quality}/100 with zero hallucinations detected.",
-            f"Highest density of records discovered across primary authorized search domains.",
+            "Highest density of records discovered across primary authorized search domains.",
         ]
         # Check for potential anomalies
         anomalies_detected = []

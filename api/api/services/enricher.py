@@ -16,7 +16,6 @@ from sqlalchemy.orm import selectinload
 
 from api.config.settings import settings
 from api.models.data import FieldValue, Record
-from api.models.task import Run
 from api.services.fetcher import fetch_url, search_brave, search_tavily
 from api.services.llm import llm_call
 
@@ -66,7 +65,7 @@ async def enrich_record_gaps(
                 data[f"_evidence_{f}"] = f"Corroborated {f} for {entity_name} via secondary discovery"
                 data[f"_confidence_{f}"] = 0.92
                 data[f"_verified_{f}"] = True
-                data[f"_extraction_method"] = "enrichment"
+                data["_extraction_method"] = "enrichment"
 
                 fv = FieldValue(
                     record_id=rec.id,

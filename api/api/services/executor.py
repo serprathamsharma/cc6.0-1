@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-import json
 from datetime import datetime, timezone
-from typing import Any
 
 from urllib.parse import urlparse
 
@@ -109,8 +107,6 @@ async def _execute_demo(
 
     # Persist fixture records
     from api.models.data import Record, FieldValue, Source, DatasetVersion
-    from api.models.task import Task
-    import uuid
 
     source = Source(
         run_id=run.id,

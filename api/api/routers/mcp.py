@@ -6,15 +6,14 @@ and natural language query capabilities to external AI agents (Cursor, Claude De
 from __future__ import annotations
 
 import json
-from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from api.db import get_db
-from api.models.data import Record, FieldValue, DatasetVersion
-from api.models.task import Task, Run, TaskStatus
+from api.models.data import Record
+from api.models.task import Task
 from api.services.insights import generate_dataset_insights
 from api.services.diff import compute_version_diff
 

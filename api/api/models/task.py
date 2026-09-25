@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import enum
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean, DateTime, Float, ForeignKey, Integer, JSON, String, Text, Enum as SAEnum
@@ -11,6 +11,9 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimestampMixin, new_id
+
+if TYPE_CHECKING:
+    from .data import Record, Source
 
 
 class TaskStatus(str, enum.Enum):
