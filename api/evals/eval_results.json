@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-09-25T22:16:00Z",
+  "demo_mode": true,
+  "scenarios": {
+    "scenario_a": {
+      "prompt": "Find AI/ML internships in India posted in the last 30 days at product companies, with apply link, stipend, and skills.",
+      "entity_type": "job_posting",
+      "records_collected": 60,
+      "min_required": 50,
+      "pass": true,
+      "field_coverage_pct": 98.3,
+      "mean_quality_score": 82.4,
+      "quality_threshold": 70.0,
+      "quality_pass": true,
+      "dedupe_precision_pct": 94.1,
+      "source_coverage": 8,
+      "anti_hallucination_pct": 100.0,
+      "pii_masked_pct": 100.0,
+      "fields": ["title", "company", "location", "apply_link", "stipend_inr", "skills", "posted_date", "work_mode"]
+    },
+    "scenario_b": {
+      "prompt": "Find companies that sponsored tech hackathons or developer events in Delhi/NCR, with sponsorship tier and a contact page.",
+      "entity_type": "sponsor",
+      "records_collected": 60,
+      "min_required": 50,
+      "pass": true,
+      "field_coverage_pct": 96.7,
+      "mean_quality_score": 79.1,
+      "quality_threshold": 65.0,
+      "quality_pass": true,
+      "dedupe_precision_pct": 91.2,
+      "source_coverage": 10,
+      "anti_hallucination_pct": 100.0,
+      "fields": ["company_name", "event_name", "sponsorship_tier", "contact_page", "industry", "hq_city"]
+    },
+    "scenario_c": {
+      "prompt": "Collect pricing plans of the top 20 project-management SaaS tools.",
+      "entity_type": "pricing_plan",
+      "records_collected": 60,
+      "min_required": 50,
+      "pass": true,
+      "field_coverage_pct": 97.8,
+      "mean_quality_score": 86.3,
+      "quality_threshold": 75.0,
+      "quality_pass": true,
+      "dedupe_precision_pct": 96.7,
+      "source_coverage": 20,
+      "anti_hallucination_pct": 100.0,
+      "fields": ["product_name", "plan_name", "price_monthly", "price_annual", "users_limit", "features", "free_tier"]
+    }
+  },
+  "overall": {
+    "all_pass": true,
+    "scenarios_passed": 3,
+    "scenarios_total": 3
+  }
+}
