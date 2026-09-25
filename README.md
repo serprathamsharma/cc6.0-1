@@ -116,6 +116,18 @@ docker compose up
 
 ---
 
+## 🏆 Cutting-Edge Intelligence Features
+
+| Capability | Innovation | Inspiration & Value |
+|---|---|---|
+| **📊 Autonomous AI Insights** | Auto-generates executive summaries, statistical anomaly flags, categorical histograms, and 1-click interactive inquiries. | *ThoughtSpot & Palantir Foundry* — turns raw scraped rows into instantaneous executive intelligence. |
+| **🔍 Cell-Level Provenance & HITL** | Every cell traces to cryptographic SHA-256 snapshot hashes, verbatim quotes, confidence meters, and allows real-time Human-in-the-Loop adjudication (verify, dispute, edit). | *Scale AI Data Engine* — 100% anti-hallucination and auditability for regulated enterprise domains. |
+| **⚡ Autonomous Gap-Filling Agent** | Scans for empty schema attributes across harvested records and autonomously triggers targeted secondary web searches to backfill missing fields. | *Clay & Apollo* — eliminates sparse datasets without human intervention. |
+| **📈 Version Diff & Lineage Engine** | Computes record-level diffs between consecutive crawler runs, tracking added, modified, and removed entities with quality score deltas. | *DataHub & Git for Data* — enables continuous automated web monitoring without duplicate storage. |
+| **🔌 Model Context Protocol (MCP)** | Native JSON-RPC 2.0 MCP server exposing tools (`scoutiq_query_records`, `scoutiq_get_dataset_insights`, `scoutiq_verify_provenance`) to Cursor, Claude Desktop, and autonomous agents. | *Anthropic MCP Spec* — interoperable with next-gen agent swarms. |
+
+---
+
 ## ⚙️ Configuration
 
 | Env Var | Default | Description |

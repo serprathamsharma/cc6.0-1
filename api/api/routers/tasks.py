@@ -24,8 +24,11 @@ from api.schemas.task import (
     RunOut, TaskCreate, TaskOut, WorkflowApprove, WorkflowOut,
 )
 from api.services.compliance import screen_prompt, generate_compliance_report
+from api.services.diff import compute_version_diff
+from api.services.enricher import enrich_record_gaps
 from api.services.executor import execute_run
 from api.services.exporter import export_csv, export_xlsx, export_json, export_parquet
+from api.services.insights import generate_dataset_insights
 from api.services.planner import plan_workflow
 from api.config.settings import settings
 
@@ -548,6 +551,82 @@ async def list_versions(
         }
         for v in versions
     ]
+
+
+@router.get("/{task_id}/versions/{version_id}/diff")
+async def get_version_diff(
+    task_id: str,
+    version_id: str,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await _get_task(task_id, user, db)
+    return await compute_version_diff(version_id, db)
+
+
+# ── AI Insights & Executive Intelligence ──────────────────────────────────
+@router.get("/{task_id}/runs/{run_id}/insights")
+async def get_run_insights(
+    task_id: str,
+    run_id: str,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await _get_task(task_id, user, db)
+    return await generate_dataset_insights(task_id, run_id, db)
+
+
+# ── Autonomous Data Enrichment ────────────────────────────────────────────
+@router.post("/{task_id}/runs/{run_id}/enrich")
+async def enrich_run(
+    task_id: str,
+    run_id: str,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await _get_task(task_id, user, db)
+    wf_res = await db.execute(
+        select(Workflow).where(Workflow.task_id == task_id).order_by(desc(Workflow.version))
+    )
+    wf = wf_res.scalars().first()
+    target_fields = wf.requirement_spec.get("target_fields", []) if wf else []
+    return await enrich_record_gaps(run_id, target_fields, db)
+
+
+# ── Human-in-the-Loop Field Adjudication ──────────────────────────────────
+@router.patch("/{task_id}/records/{record_id}/fields/{field_name}")
+async def adjudicate_field(
+    task_id: str,
+    record_id: str,
+    field_name: str,
+    body: dict,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await _get_task(task_id, user, db)
+    rec_res = await db.execute(
+        select(Record).where(Record.id == record_id).options(selectinload(Record.field_values))
+    )
+    rec = rec_res.scalar_one_or_none()
+    if not rec:
+        raise HTTPException(404, "Record not found")
+
+    is_verified = body.get("verified")
+    new_value = body.get("value")
+
+    for fv in rec.field_values:
+        if fv.field_name == field_name:
+            if is_verified is not None:
+                fv.verified = bool(is_verified)
+            if new_value is not None:
+                fv.value_text = str(new_value)
+                data = dict(rec.data)
+                data[field_name] = new_value
+                rec.data = data
+
+    await db.flush()
+    return {"ok": True, "record_id": record_id, "field_name": field_name}
+
 
 
 # ── Task Actions ──────────────────────────────────────────────────────────

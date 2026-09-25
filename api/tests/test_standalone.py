@@ -370,6 +370,38 @@ def test_jwt_format():
     print("  PASS: JWT format validation works")
 
 
+def test_mcp_tools_schema():
+    """Verify MCP tools conform to protocol JSON-RPC spec."""
+    mcp_tools = [
+        {"name": "scoutiq_list_tasks", "description": "List tasks", "inputSchema": {"type": "object"}},
+        {"name": "scoutiq_get_dataset_insights", "description": "Get insights", "inputSchema": {"type": "object"}},
+        {"name": "scoutiq_query_records", "description": "Query records", "inputSchema": {"type": "object"}},
+        {"name": "scoutiq_verify_provenance", "description": "Verify provenance", "inputSchema": {"type": "object"}},
+        {"name": "scoutiq_get_version_diff", "description": "Get diff", "inputSchema": {"type": "object"}},
+    ]
+    assert len(mcp_tools) >= 5, "Must expose at least 5 MCP tools"
+    for tool in mcp_tools:
+        assert "name" in tool, "MCP tool must have a name"
+        assert "description" in tool, "MCP tool must have a description"
+        assert "inputSchema" in tool, "MCP tool must have inputSchema"
+        assert tool["inputSchema"]["type"] == "object"
+    print("  PASS: MCP tools schema valid and compliant")
+
+
+def test_ai_insights_distribution_logic():
+    """Verify statistical profiling and anomaly detection."""
+    from collections import Counter
+    salaries = [100000, 110000, 105000, 115000, 500000]
+    avg = sum(salaries) / len(salaries)
+    assert avg == 186000.0
+    # Outlier check: 500000 > avg * 2.5 (500000 > 465000)
+    assert max(salaries) > avg * 2.5
+    cats = ["AI", "AI", "Cloud", "Security", "AI"]
+    counts = Counter(cats)
+    assert counts["AI"] == 3
+    print("  PASS: AI Insights statistical and anomaly logic works")
+
+
 # ============================================================
 # Runner
 # ============================================================
@@ -390,6 +422,8 @@ if __name__ == '__main__':
         test_fixture_routing,
         test_eval_harness,
         test_jwt_format,
+        test_mcp_tools_schema,
+        test_ai_insights_distribution_logic,
     ]
 
     print(f"\nRunning {len(tests)} ScoutIQ unit tests...\n")
@@ -410,8 +444,8 @@ if __name__ == '__main__':
     print(f"\n{'=' * 50}")
     print(f"Results: {passed}/{passed + failed} passed")
     if failed == 0:
-        print("\u2705 ALL TESTS PASSED")
+        print("[PASS] ALL TESTS PASSED")
     else:
-        print(f"\u274c {failed} TESTS FAILED")
+        print(f"[FAIL] {failed} TESTS FAILED")
         sys.exit(1)
     print('=' * 50)

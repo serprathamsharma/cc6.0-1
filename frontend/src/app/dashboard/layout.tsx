@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { useAuthStore } from '@/store/auth'
+import { useAuthStore, type AuthStore } from '@/store/auth'
 import { useEffect } from 'react'
 import {
   LayoutDashboard, ListTodo, History, Settings, LogOut, Moon, Sun, Zap
@@ -17,8 +17,8 @@ const nav = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const user = useAuthStore(s => s.user)
-  const logout = useAuthStore(s => s.logout)
+  const user = useAuthStore((s: AuthStore) => s.user)
+  const logout = useAuthStore((s: AuthStore) => s.logout)
   const { theme, setTheme } = useTheme()
 
   useEffect(() => {

@@ -2,10 +2,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'
 import { useState, useEffect } from 'react'
-import { useAuthStore } from '@/store/auth'
+import { useAuthStore, type AuthStore } from '@/store/auth'
 
 function AuthLoader({ children }: { children: React.ReactNode }) {
-  const loadFromStorage = useAuthStore(s => s.loadFromStorage)
+  const loadFromStorage = useAuthStore((s: AuthStore) => s.loadFromStorage)
   useEffect(() => { loadFromStorage() }, [loadFromStorage])
   return <>{children}</>
 }

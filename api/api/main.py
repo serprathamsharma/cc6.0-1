@@ -17,7 +17,7 @@ logger.add(
 )
 
 from api.config.settings import settings
-from api.routers import auth, health, tasks
+from api.routers import auth, health, mcp, tasks
 
 # Configurable CORS origins: defaults + CORS_ORIGINS env var (comma-separated)
 _CORS_ORIGINS = ["http://localhost:3000", "http://web:3000"]
@@ -62,6 +62,9 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(health.router, prefix="/api/v1")
+app.include_router(mcp.router)
+app.include_router(mcp.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(tasks.router, prefix="/api/v1")
+
 

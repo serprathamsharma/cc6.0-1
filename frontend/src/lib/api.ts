@@ -109,6 +109,20 @@ export const tasksApi = {
       { method: 'POST', body: JSON.stringify({ question }) }
     ),
   versions: (taskId: string) => apiFetch<DatasetVersion[]>(`/api/v1/tasks/${taskId}/versions`),
+  getVersionDiff: (taskId: string, versionId: string) =>
+    apiFetch<VersionDiff>(`/api/v1/tasks/${taskId}/versions/${versionId}/diff`),
+  getInsights: (taskId: string, runId: string) =>
+    apiFetch<DatasetInsights>(`/api/v1/tasks/${taskId}/runs/${runId}/insights`),
+  enrichRun: (taskId: string, runId: string) =>
+    apiFetch<{ enriched_records: number; fields_filled: number; message: string }>(
+      `/api/v1/tasks/${taskId}/runs/${runId}/enrich`,
+      { method: 'POST' }
+    ),
+  adjudicateField: (taskId: string, recordId: string, fieldName: string, data: { verified?: boolean; value?: string }) =>
+    apiFetch<{ ok: boolean }>(
+      `/api/v1/tasks/${taskId}/records/${recordId}/fields/${fieldName}`,
+      { method: 'PATCH', body: JSON.stringify(data) }
+    ),
   archive: (taskId: string) => apiFetch<void>(`/api/v1/tasks/${taskId}/archive`, { method: 'PATCH' }),
   delete: (taskId: string) => apiFetch<void>(`/api/v1/tasks/${taskId}`, { method: 'DELETE' }),
   clone: (taskId: string) => apiFetch<Task>(`/api/v1/tasks/${taskId}/clone`, { method: 'POST' }),
@@ -248,3 +262,34 @@ export interface DatasetVersion {
   diff_summary: Record<string, unknown> | null
   created_at: string
 }
+
+export interface DatasetInsights {
+  record_count: number
+  average_quality_score: number
+  executive_summary: string
+  key_takeaways: string[]
+  anomalies_detected: string[]
+  distributions: Record<string, unknown>
+  charts: { id: string; title: string; type: string; data: { name: string; value: number }[] }[]
+  recommended_questions: string[]
+  analyzed_at: string
+}
+
+export interface VersionDiff {
+  current_version: number
+  previous_version: number | null
+  summary: string
+  added_count: number
+  removed_count: number
+  modified_count: number
+  unchanged_count: number
+  quality_delta: number
+  changes: Array<{
+    type: 'added' | 'removed' | 'modified'
+    record_id: string
+    key?: string
+    preview?: Record<string, unknown>
+    field_diffs?: Record<string, { old: unknown; new: unknown }>
+  }>
+}
+

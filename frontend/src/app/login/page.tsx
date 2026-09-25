@@ -1,13 +1,13 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/store/auth'
+import { useAuthStore, type AuthStore } from '@/store/auth'
 import { authApi } from '@/lib/api'
 import { motion } from 'framer-motion'
 
 export default function LoginPage() {
   const router = useRouter()
-  const setAuth = useAuthStore(s => s.setAuth)
+  const setAuth = useAuthStore((s: AuthStore) => s.setAuth)
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [form, setForm] = useState({ name: '', email: '', password: '', workspace_name: 'My Workspace' })
   const [error, setError] = useState('')

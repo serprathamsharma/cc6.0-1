@@ -8,7 +8,7 @@ interface AuthUser {
   email: string
 }
 
-interface AuthStore {
+export interface AuthStore {
   user: AuthUser | null
   token: string | null
   setAuth: (user: AuthUser, token: string) => void
@@ -19,7 +19,7 @@ interface AuthStore {
 export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
   token: null,
-  setAuth: (user, token) => {
+  setAuth: (user: AuthUser, token: string) => {
     setToken(token)
     if (typeof window !== 'undefined') {
       localStorage.setItem('scoutiq_user', JSON.stringify(user))

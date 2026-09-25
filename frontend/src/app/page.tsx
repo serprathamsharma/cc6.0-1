@@ -1,11 +1,11 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { useAuthStore } from '@/store/auth'
+import { useAuthStore, type AuthStore } from '@/store/auth'
 
 export default function RootPage() {
   const router = useRouter()
-  const user = useAuthStore(s => s.user)
+  const user = useAuthStore((s: AuthStore) => s.user)
   useEffect(() => {
     if (user) router.replace('/dashboard')
     else router.replace('/login')
