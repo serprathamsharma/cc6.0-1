@@ -18,14 +18,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter()
   const pathname = usePathname()
   const user = useAuthStore((s: AuthStore) => s.user)
-  const logout = useAuthStore((s: AuthStore) => s.logout)
   const { theme, setTheme } = useTheme()
-
-  useEffect(() => {
-    if (!user) router.replace('/login')
-  }, [user, router])
-
-  if (!user) return null
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -57,20 +50,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         <div className="p-4 border-t space-y-2">
-          <div className="text-xs text-muted-foreground truncate px-3">{user.email}</div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Demo Workspace Active
+          </div>
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted w-full"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted w-full transition-colors"
           >
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-          </button>
-          <button
-            onClick={() => { logout(); router.push('/login') }}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted w-full"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign out
           </button>
         </div>
       </aside>

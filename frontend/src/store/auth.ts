@@ -16,9 +16,16 @@ export interface AuthStore {
   loadFromStorage: () => void
 }
 
+export const DEMO_USER: AuthUser = {
+  user_id: 'usr_demo_01',
+  workspace_id: 'ws_demo_01',
+  name: 'Demo Scout',
+  email: 'demo@scoutiq.ai',
+}
+
 export const useAuthStore = create<AuthStore>((set) => ({
-  user: null,
-  token: null,
+  user: DEMO_USER,
+  token: 'demo_token',
   setAuth: (user: AuthUser, token: string) => {
     setToken(token)
     if (typeof window !== 'undefined') {
@@ -28,7 +35,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
   logout: () => {
     clearToken()
-    set({ user: null, token: null })
+    set({ user: DEMO_USER, token: 'demo_token' })
   },
   loadFromStorage: () => {
     if (typeof window === 'undefined') return
@@ -39,6 +46,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
         const user = JSON.parse(userStr)
         set({ user, token })
       } catch {}
+    } else {
+      set({ user: DEMO_USER, token: 'demo_token' })
     }
   },
 }))
